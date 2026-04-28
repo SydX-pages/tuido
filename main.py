@@ -1,8 +1,10 @@
 import json
 from datetime import datetime
 import argparse
+import os
 
-DB = "db.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB = os.path.join(BASE_DIR, "db.json")
 
 
 def clear():
@@ -60,20 +62,57 @@ def set_status(id, status):
             elif status == "reminder":
                 item["status"] = 0
                 print(item["content"], "is a reminder")
+            elif status == "toggle":
+                item["status"] *= -1
+                if item["status"] == 0:
+                    item["status"] = -1
+                if item["status"] == -1:
+                    text = "undone"
+                elif item["status"] == 1:
+                    text = "done"
+                print(item["content"], "text")
+
     re_upload(data)
 
 
-def show():
-    data = load()
-    for item in data:
-        if item["status"] == 1:
-            status = "✅"
-        elif item["status"] == -1:
+def print_one(item):
+    if item["status"] == 1:
+        status = "✅"
+    elif item["status"] == -1:
+        if (
+            item["deadline"]
+            and datetime.strptime(item["deadline"], "%Y-%m-%d").date()
+            < datetime.now().date()
+        ):
             status = "❌"
         else:
-            status = "⏰"
-        deadline = item["deadline"] or "-"
-        print(f"{item['id']: <5} {item['content']: <20} {deadline:<20} {status:<5}")
+            status = "❕"
+    else:
+        status = "⏰"
+    deadline = item["deadline"] or "-"
+    return f"{item['id']: <5} {item['content']: <40} {deadline:<10} {status:<5}\n"
+
+
+def show(index):
+    data = load()
+    data = data[::-1]
+    result = ""
+    if index is None:
+        for item in data:
+            result += print_one(item)
+    else:
+        if index >= len(data):
+            return
+        result += print_one(data[index])
+    print(result)
+
+
+def add_ui():
+    content = str(input("Content: "))
+    ddl = str(input("deadline: "))
+    if ddl:
+        ddl = datetime.strptime(ddl, "%Y-%m-%d").strftime("%Y-%m-%d")
+    add(content, ddl)
 
 
 def args_parse():
@@ -86,15 +125,32 @@ def args_parse():
 
     rm_parser = sub.add_parser("rm")
     rm_parser.add_argument("id", type=int)
+    rm_parser.add_argument("--index", action="store_true")
 
     set_parser = sub.add_parser("set")
     set_parser.add_argument("id", type=int)
-    set_parser.add_argument("status", choices=["done", "undone", "reminder"])
+    set_parser.add_argument("status", choices=["done", "undone", "reminder", "toggle"])
+    set_parser.add_argument("--index", action="store_true")
 
-    sub.add_parser("ls")
+    ls_parser = sub.add_parser("ls")
+    ls_parser.add_argument("--index", type=int)
+
+    sub.add_parser("add_ui")
+    sub.add_parser("run_tui")
+
     sub.add_parser("clear")
 
     return parser.parse_args()
+
+
+def get_id_by_index(index):
+    return load()[::-1][index]["id"]
+
+
+def run_tui():
+    print("Coming Soon...")
+    while 1:
+        x = input("~>")
 
 
 if __name__ == "__main__":
@@ -108,10 +164,20 @@ if __name__ == "__main__":
             ddl = datetime.strptime(args.ddl, "%Y-%m-%d").strftime("%Y-%m-%d")
         add(args.content, ddl)
     elif cmd == "ls":
-        show()
+        show(args.index)
     elif cmd == "rm":
-        remove(args.id)
+        if args.index:
+            remove(get_id_by_index(args.id))
+        else:
+            remove(args.id)
     elif cmd == "set":
-        set_status(args.id, args.status)
+        if args.index:
+            set_status(get_id_by_index(args.id), args.status)
+        else:
+            set_status(args.id, args.status)
     elif cmd == "clear":
         clear()
+    elif cmd == "add_ui":
+        add_ui()
+    elif cmd == "run_tui":
+        run_tui()
