@@ -25,3 +25,5 @@ python -m app.main clear
 # tui
 python -m app.main run_tui
 ```
+
+## [my waybar](https://github.com/SydX-pages/waybar_with_widgets)
