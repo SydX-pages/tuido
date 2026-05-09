@@ -8,21 +8,22 @@ A TUI todo-list App using with waybar
 
 ```sh
 # list all items in db.json
-python main.py ls
+python -m app.main ls
 
 # add new item (--ddl)
-python main.py add --ddl 2026-5-20
+python -m app.main add --ddl 2026-5-20
 
 # remove by id
-python main.py rm $id
+python -m app.main rm $id
 # remove by index
-python main.py rm $id --index
+python -m app.main rm $id --index
 
 # set status(done|undone|reminder|toggle)
-python main.py set $status
+python -m app.main set $status
 
 # clear
-python main.py clear
-```
+python -m app.main clear
 
-# TUI
+# tui
+python -m app.main run_tui
+```
