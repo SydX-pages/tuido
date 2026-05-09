@@ -4,8 +4,6 @@ A TUI todo-list App using with waybar
 
 # Usage
 
-## CLI
-
 ```sh
 # list all items in db.json
 python -m app.main ls
